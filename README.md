@@ -23,13 +23,13 @@ var schema = {
   required: ["lol"]
 };
 
-service(app, schema, function(req) {
+service(app, "/serviceEndpoint", schema, function(req) {
   return { omg: req.params.lol };
 });
 ```
 
-Call `service()` with a path, a
-[JSON schema](http://json-schema.org/examples.html) and a handler
+Call `service()` with your Mach app, the path to mount the service at,
+a [JSON schema](http://json-schema.org/examples.html) and a handler
 function. The schema will be verified before the request is passed on
 to the handler function, which will not be called in case the request
 parameters fail to validate. The handler function should return a
