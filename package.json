@@ -1,0 +1,28 @@
+{
+  "name": "norest",
+  "version": "0.0.0",
+  "description": "Web service helpers for Mach.",
+  "author": "Bodil Stokke",
+  "license": "Apache-2",
+  "homepage": "https://bitbucket.org/futureadlabs/norest",
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:futureadlabs/norest.git"
+  },
+  "keywords": [
+    "webservices",
+    "microservices",
+    "rest"
+  ],
+  "scripts": {
+    "compile": "tsc --declaration --sourcemap --module commonjs --outDir . src/norest.ts",
+    "watch": "tsc --watch --declaration --sourcemap --module commonjs --outDir . src/norest.ts",
+    "prepublish": "npm run compile"
+  },
+  "dependencies": {
+    "typescript": "1.0.0",
+    "merge": "1.1.2",
+    "z-schema": "2.4.6"
+  },
+  "main": "./norest.js"
+}
