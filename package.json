@@ -1,13 +1,16 @@
 {
   "name": "norest",
-  "version": "0.0.0",
-  "description": "Web service helpers for Mach.",
-  "author": "Bodil Stokke",
+  "version": "0.1.0",
+  "description": "Web service helpers for Mach",
+  "author": {
+    "name": "Bodil Stokke",
+    "email": "bodil@futureadlabs.com"
+  },
   "license": "Apache-2",
-  "homepage": "https://bitbucket.org/futureadlabs/norest",
+  "homepage": "https://github.com/FutureAdLabs/norest",
   "repository": {
     "type": "git",
-    "url": "git@bitbucket.org:futureadlabs/norest.git"
+    "url": "https://github.com/FutureAdLabs/norest.git"
   },
   "keywords": [
     "webservices",

@@ -34,7 +34,8 @@ function. The schema will be verified before the request is passed on
 to the handler function, which will not be called in case the request
 parameters fail to validate. The handler function should return a
 value or the promise of a value, which will be converted to JSON and
-passed as the response.
+passed as the response. If the promise fails, it will attempt to
+automate a reasonable error response.
 
 # License
 
