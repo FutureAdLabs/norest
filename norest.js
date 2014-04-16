@@ -1,3 +1,4 @@
+var log = require("winston");
 var util = require("util");
 var ZSchema = require("z-schema");
 var validator = new ZSchema({
@@ -11,6 +12,7 @@ function service(app, path, schema, handler) {
             return validator.validate(req.params, compiledSchema).then(function (report) {
                 return req.call(handler).catch(function (error) {
                     if (util.isError(error)) {
+                        log.error("While handling HTTP request on %j: %s", path, error.stack);
                         return {
                             status: 500,
                             headers: { "Content-Type": "application/json" },
@@ -26,6 +28,7 @@ function service(app, path, schema, handler) {
                             })
                         };
                     } else {
+                        log.error("While handling HTTP request on %j: %j", path, error);
                         return {
                             status: 500,
                             headers: { "Content-Type": "application/json" },
