@@ -1,3 +1,4 @@
+///<reference path="../typings/tsd.d.ts" />
 var log = require("winston");
 var util = require("util");
 var ZSchema = require("z-schema");

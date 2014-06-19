@@ -1,4 +1,4 @@
-declare var require: (module: string) => any;
+///<reference path="../typings/tsd.d.ts" />
 
 var log = require("winston");
 var util = require("util");

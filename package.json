@@ -20,7 +20,9 @@
   "scripts": {
     "compile": "tsc --declaration --sourcemap --module commonjs --outDir . src/norest.ts",
     "watch": "tsc --watch --declaration --sourcemap --module commonjs --outDir . src/norest.ts",
-    "prepublish": "npm run compile"
+    "prepublish": "npm run compile",
+    "test": "tsc --sourcemap --module commonjs --outDir build/test test/*.ts && mocha -A --check-leaks build/test/test",
+    "watch-test": "supervisor -n exit -w src,test -e ts -x npm test"
   },
   "dependencies": {
     "typescript": "1.0.0",
@@ -28,5 +30,10 @@
     "z-schema": "2.4.6",
     "winston": "0.7.3"
   },
-  "main": "./norest.js"
+  "main": "./norest.js",
+  "devDependencies": {
+    "mach": "^0.9.2",
+    "mocha": "^1.20.1",
+    "supervisor": "^0.6.0"
+  }
 }
