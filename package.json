@@ -1,7 +1,7 @@
 {
   "name": "norest",
-  "version": "0.1.0",
-  "description": "Web service helpers for Mach",
+  "version": "1.0.0",
+  "description": "Web service helpers",
   "author": {
     "name": "Bodil Stokke",
     "email": "bodil@futureadlabs.com"
@@ -18,22 +18,17 @@
     "rest"
   ],
   "scripts": {
-    "compile": "tsc --declaration --sourcemap --module commonjs --outDir . src/norest.ts",
-    "watch": "tsc --watch --declaration --sourcemap --module commonjs --outDir . src/norest.ts",
-    "prepublish": "npm run compile",
-    "test": "tsc --sourcemap --module commonjs --outDir build/test test/*.ts && mocha -A --check-leaks build/test/test",
-    "watch-test": "supervisor -n exit -w src,test -e ts -x npm test"
+    "test": "mocha -A --check-leaks test"
   },
   "dependencies": {
-    "typescript": "1.0.0",
-    "merge": "1.1.2",
-    "z-schema": "2.4.6",
-    "winston": "0.7.3"
+    "q": "^2.0.2",
+    "winston": "0.7.3",
+    "z-schema": "2.4.6"
   },
   "main": "./norest.js",
   "devDependencies": {
-    "mach": "^0.9.2",
-    "mocha": "^1.20.1",
-    "supervisor": "^0.6.0"
+    "mocha": "^1.21.4",
+    "mocks": "0.0.15",
+    "node-mocks-http": "^1.0.4"
   }
 }

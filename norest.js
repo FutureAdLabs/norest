@@ -1,57 +1,96 @@
-///<reference path="../typings/tsd.d.ts" />
+var Q = require("q");
 var log = require("winston");
 var util = require("util");
+var url = require("url");
 var ZSchema = require("z-schema");
 var validator = new ZSchema({
-    noExtraKeywords: true,
-    noTypeless: true
+  noExtraKeywords: true,
+  noTypeless: true
 });
 
-function service(app, path, schema, handler) {
-    validator.compileSchema(schema).then(function (compiledSchema) {
-        app.get(path, function (req) {
-            return validator.validate(req.params, compiledSchema).then(function (report) {
-                return req.call(handler).catch(function (error) {
-                    if (util.isError(error)) {
-                        log.error("While handling HTTP request on %j: %s", path, error.stack);
-                        return {
-                            status: 500,
-                            headers: { "Content-Type": "application/json" },
-                            content: JSON.stringify({
-                                name: error.name,
-                                message: error.message,
-                                description: error.description,
-                                number: error.number,
-                                fileName: error.fileName,
-                                lineNumber: error.lineNumber,
-                                columnNumber: error.columnNumber,
-                                stack: error.stack
-                            })
-                        };
-                    } else {
-                        log.error("While handling HTTP request on %j: %j", path, error);
-                        return {
-                            status: 500,
-                            headers: { "Content-Type": "application/json" },
-                            content: JSON.stringify({
-                                error: error,
-                                inspect: util.inspect(error)
-                            })
-                        };
-                    }
-                });
-            }).catch(function (error) {
-                return {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
-                    content: JSON.stringify(error)
-                };
-            });
-        });
-    }).catch(function (error) {
-        throw new TypeError("Invalid JSON schema provided for path \"" + path + "\": " + error);
-    });
+function request(method, path, handler) {
+  return function(req, res) {
+    if (req.method === method && req.url.split("?")[0] === path) {
+      return Q(handler).then(function(handler) {
+        handler(req, res);
+      }).then(function() {
+        return true;
+      });
+    } else {
+      return Q(false);
+    }
+  }
 }
+module.exports.request = request;
 
-module.exports = service;
-//# sourceMappingURL=norest.js.map
+function select(fns) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  if (!fns.length) {
+    return Q(false);
+  }
+  var fn = fns[0];
+  return fn.apply(this, args).then(function(s) {
+    return s ? s : select.apply(this, [fns.slice(1)].concat(args));
+  });
+}
+module.exports.select = select;
+
+function respond(res, status, value, headers) {
+  headers = headers || {};
+  if (typeof headers === "string") {
+    headers = { "Content-Type": headers };
+  }
+  if (!headers["Content-Type"]) {
+    value = JSON.stringify(value, null, 2) + "\n";
+    headers["Content-Type"] = "application/json";
+  }
+  headers["Content-Length"] = value.length;
+  res.writeHead(status, headers);
+  res.end(value);
+}
+module.exports.respond = respond;
+
+function describeError(res, error) {
+  respond(res, 500, util.isError(error) ? {
+    name: error.name,
+    message: error.message,
+    description: error.description,
+    number: error.number,
+    fileName: error.fileName,
+    lineNumber: error.lineNumber,
+    columnNumber: error.columnNumber,
+    stack: error.stack
+  } : {
+    error: error,
+    inspect: util.inspect(error)
+  });
+  log.error(util.isError(error) ? error.stack : error);
+}
+module.exports.describeError = describeError;
+
+// TODO should parse request body for params too
+function service(schema, handler) {
+  return validator.compileSchema(schema).then(function(compiledSchema) {
+    return function(req, res) {
+      req.params = url.parse(req.url, true).query;
+      validator.validate(req.params, compiledSchema).then(function(report) {
+        Q(handler).then(function(handler) { return Q(handler).call(this, req, res)
+                                     .catch(describeError.bind(this, res)); });
+      }).catch(function(error) {
+        respond(res, 400, error);
+      });
+    };
+  }).catch(function(error) {
+    throw new TypeError("Invalid JSON schema: " + error);
+  });
+}
+module.exports.service = service;
+
+function run(services) {
+  return function(req, res) {
+    select(services, req, res).then(function(r) {
+      r || respond(res, 404, "404 not found", "text/plain");
+    }).catch(describeError.bind(this, res));
+  }
+}
+module.exports.run = run;
