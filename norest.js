@@ -2,6 +2,7 @@ var Q = require("q");
 var log = require("winston");
 var util = require("util");
 var url = require("url");
+var getRawBody = require('raw-body');
 var ZSchema = require("z-schema");
 var validator = new ZSchema({
   noExtraKeywords: true,
@@ -68,16 +69,43 @@ function describeError(res, error) {
 }
 module.exports.describeError = describeError;
 
-// TODO should parse request body for params too
+
+function parseRequest(req){
+  
+  if(req.method === "GET"){
+    req.params = url.parse(req.url, true).query;  
+    return Q(true);
+  }
+  var deferred = Q.defer();
+
+  getRawBody(req, {
+    length: req.headers['content-length'],
+    limit: '1mb',
+    encoding: 'utf-8'
+  }, function (err, data) {
+    if (err){
+      log.error(util.isError(err) ? err.stack : err);
+      req.params = {};
+      deferred.resolve(true);
+    }
+    //I am only parsing if data is a JSON.stringify entity!
+    req.params = JSON.parse(data);
+    deferred.resolve(true);
+  })
+  return deferred.promise;
+}
+
+
 function service(schema, handler) {
   return validator.compileSchema(schema).then(function(compiledSchema) {
     return function(req, res) {
-      req.params = url.parse(req.url, true).query;
-      validator.validate(req.params, compiledSchema).then(function(report) {
-        Q(handler).then(function(handler) { return Q(handler).call(this, req, res)
-                                     .catch(describeError.bind(this, res)); });
-      }).catch(function(error) {
-        respond(res, 400, error);
+      parseRequest(req).then(function(){
+        validator.validate(req.params, compiledSchema).then(function(report) {
+          Q(handler).then(function(handler) { return Q(handler).call(this, req, res)
+                                       .catch(describeError.bind(this, res)); });
+        }).catch(function(error) {
+          respond(res, 400, error);
+        });
       });
     };
   }).catch(function(error) {
