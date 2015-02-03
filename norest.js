@@ -45,7 +45,7 @@ function respond(res, status, value, headers) {
     value = JSON.stringify(value, null, 2) + "\n";
     headers["Content-Type"] = "application/json";
   }
-  headers["Content-Length"] = value.length;
+  headers["Content-Length"] = Buffer.byteLength(value, 'utf-8');
   res.writeHead(status, headers);
   res.end(value);
 }
@@ -71,9 +71,9 @@ module.exports.describeError = describeError;
 
 
 function parseRequest(req){
-  
+
   if(req.method === "GET"){
-    req.params = url.parse(req.url, true).query;  
+    req.params = url.parse(req.url, true).query;
     return Q(true);
   }
   var deferred = Q.defer();
